@@ -1,0 +1,86 @@
+name: Security CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  PIP_NO_INPUT: '1'
+
+jobs:
+  tests:
+    name: Python and security regression tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+      - name: Install pinned application dependencies
+        run: |
+          python -m venv "$RUNNER_TEMP/app-venv"
+          "$RUNNER_TEMP/app-venv/bin/python" -m pip install --no-deps -r requirements.txt
+      - name: Full suite including authorization, scoped tools, injection, and telemetry
+        run: |
+          "$RUNNER_TEMP/app-venv/bin/python" -m pytest -q
+          "$RUNNER_TEMP/app-venv/bin/python" -m pip check
+
+  audit:
+    name: Dependency audit and workflow policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+      - name: Install isolated pinned CI tooling
+        run: |
+          python -m venv "$RUNNER_TEMP/ci-venv"
+          "$RUNNER_TEMP/ci-venv/bin/python" -m pip install --no-deps -r ci/requirements.txt
+          "$RUNNER_TEMP/ci-venv/bin/python" -m pip check
+      - name: Workflow security policy tests
+        run: '"$RUNNER_TEMP/ci-venv/bin/python" -m unittest discover -s ci -p "workflow_policy.py" -v'
+      - name: Validate GitHub Actions syntax
+        run: |
+          python ci/install_binary.py actionlint "$RUNNER_TEMP/ci-bin"
+          "$RUNNER_TEMP/ci-bin/actionlint" -shellcheck= .github/workflows/security-ci.yml
+      - name: Audit pinned application dependencies
+        run: '"$RUNNER_TEMP/ci-venv/bin/python" -m pip_audit --strict --progress-spinner off --no-deps --disable-pip -r requirements.txt'
+
+  secrets:
+    name: Secret scan of history and source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+      - name: Install checksum-verified scanner
+        run: python ci/install_binary.py gitleaks "$RUNNER_TEMP/ci-bin"
+      - name: Scan without credentials or paid services
+        run: python ci/scan_secrets.py "$RUNNER_TEMP/ci-bin/gitleaks"

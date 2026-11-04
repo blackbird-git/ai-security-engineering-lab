@@ -20,7 +20,7 @@ I built this lab to explore those questions using local models, Python, Docker, 
 
 FastAPI exposes only `GET /healthz`. Inference, tools, and investigations run through internal Python modules and CLI demonstrations.
 
-## Interesting problems I encountered
+## Interesting problems encountered
 
 ### Incomplete Qwen generations
 
@@ -42,7 +42,7 @@ Offline tests deliberately supply malicious proposals to verify cross-customer d
 
 Five actual Python authorization denials produced five indexed Wazuh alerts. The observed rules were `100602`, `100603`, `100604`, `100605`, and `100610`; repeated same-service failures reached level 10. Existing SSH detection remained functional.
 
-Correlation expiration is still unresolved. An early test did not establish the actual processing interval, and a later synchronized test stopped on a harness cleanup defect. I documented both rather than treating them as a confirmed rule failure.
+Correlation expiration is still unresolved. Not sure what's going on there - need to revisit. An early test did not establish the actual processing interval, and a later synchronized test stopped on a harness cleanup defect. I documented both rather than treating them as a confirmed rule failure.
 
 [Authorization detection investigation](docs/investigations/003-ai-agent-authorization-detection.md) · [Correlation investigation](docs/investigations/002-wazuh-correlation-expiry.md)
 

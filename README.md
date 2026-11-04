@@ -4,7 +4,9 @@ A hands-on training and portfolio project for LLM and agent security, applicatio
 
 ## Current status
 
-Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Authentication, Ollama integration, financial data, agent tools, and Wazuh integration are not implemented. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md) for evidence and limitations.
+Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Milestone 3 is complete for the internal local Ollama client; FastAPI-to-Ollama integration, authentication, financial data, agent tools, and Wazuh integration are not implemented. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md) for baseline evidence and limitations.
+
+The normal inference model is `qwen3:4b-instruct`; `qwen3:4b` is retained as an experimental thinking model and is not selectable through the fixed-model client. The owner verified a direct Ollama API result of `LAB_READY` with `done: true` and `done_reason: "stop"` for the instruct variant. The owner also verified that the updated Python client returned `LAB_READY`; see the [Milestone 3 validation record](docs/validation/milestone-03-ollama-integration.md). Instruction-following does not establish model trustworthiness. See [ADR-0002 (Accepted)](docs/security-decisions/ADR-0002-local-ollama-client.md) and [Investigation 001](docs/investigations/001-ollama-generation-truncation.md).
 
 Owner-verified environment: Ubuntu 26.04 LTS, Python 3.14.4, Docker 29.8.2, Ollama 0.40.13, and Qwen3 4B. Wazuh 4.14.9 is the intended telemetry destination. Compatibility and integration remain to be tested.
 
@@ -17,7 +19,7 @@ Lab client
 Python FastAPI (trusted identity, validation, authorization)
     |
     v
-Local Ollama / Qwen3 4B (untrusted proposals)
+Local Ollama / qwen3:4b-instruct (untrusted proposals)
     |
     v
 Application tool dispatcher (authorization on each action/resource)
@@ -42,13 +44,13 @@ The diagram shows logical flow, not direct model access to tools. Application co
 
 ## Eight development milestones
 
-Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline; Ollama integration is deferred to future work. Later milestones remain planned. Each requires evidence before it is marked complete.
+Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only; synthetic data and later work remain planned. Each requires evidence before it is marked complete.
 
 | # | Milestone | Completion evidence |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Scope, trust boundaries, and standards | Reviewed README, agent instructions, ignore rules, and ADR-0001; unresolved decisions recorded. |
-| 2 | Minimal FastAPI baseline — complete | Code review passed; 12 tests passed; dependency and whitespace checks passed; live health/docs checks and loopback binding verified. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md). Ollama integration remains deferred. |
-| 3 | Synthetic financial dataset | Deterministic labeled fixtures, documented schema and ownership, and checks that fixtures contain no real records or secrets. |
+| 2 | Minimal FastAPI baseline — complete | Code review passed; 12 tests passed; dependency and whitespace checks passed; live health/docs checks and loopback binding verified. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md). Internal Ollama integration is covered by Milestone 3. |
+| 3 | Internal local Ollama client — complete | ADR-0002 accepted for internal inference only; 85 tests passed, dependency and whitespace checks passed, incomplete generation rejected, and direct API and Python-client `LAB_READY` results owner-verified. See the [validation record](docs/validation/milestone-03-ollama-integration.md). Synthetic financial data remains future work. |
 | 4 | Application identity and authorization | Explicit role/action/resource policy with positive and negative tests, including cross-user access attempts. |
 | 5 | Controlled agent tools | Narrow tool contracts, per-invocation authorization, validated arguments/results, execution limits, and denied misuse tests. |
 | 6 | Isolated adversarial exercises | Reproducible prompt-injection and tool-abuse cases with bounded targets, expected outcomes, and regression tests. |
@@ -95,4 +97,4 @@ git status --short
 
 Tests use an in-process HTTP client and check the exact health response, undefined routes, disabled documentation endpoints, and rejected write methods. `requirements.txt` pins the resolved direct and transitive application/test dependency versions; it is not a package hash lock or a vulnerability assessment.
 
-The [November 4, 2026 validation record](docs/validation/milestone-02-fastapi-baseline.md) separates automated evidence from manually observed live HTTP and listener checks. All 12 tests passed, dependencies were consistent, and live checks verified the health endpoint, disabled documentation routes, and loopback binding. The sandbox TestClient hang and Starlette/HTTPX deprecation warning remain unresolved observations; their causes and remediation are unverified. Ollama connectivity remains unverified and outside this completed baseline's scope.
+The [November 4, 2026 validation record](docs/validation/milestone-02-fastapi-baseline.md) separates automated evidence from manually observed live HTTP and listener checks. All 12 baseline tests passed, dependencies were consistent, and live checks verified the health endpoint, disabled documentation routes, and loopback binding. The sandbox TestClient hang and Starlette/HTTPX deprecation warning remain unresolved observations; their causes and remediation are unverified. The subsequent direct Ollama API and Python-client results are documented separately in the [Milestone 3 validation record](docs/validation/milestone-03-ollama-integration.md). They do not authorize public inference, sensitive data access, or tools.

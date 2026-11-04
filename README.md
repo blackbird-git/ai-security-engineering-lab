@@ -4,7 +4,7 @@ A hands-on training and portfolio project for LLM and agent security, applicatio
 
 ## Current status
 
-Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Milestone 3 is complete for the internal local Ollama client; FastAPI-to-Ollama integration, authentication, financial data, agent tools, and Wazuh integration are not implemented. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md) for baseline evidence and limitations.
+Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Milestone 3 is complete for the internal local Ollama client. Milestone 4 is complete for synthetic fixtures, internal application authorization, offline demonstrations, and an owner-verified opt-in live experiment. FastAPI-to-Ollama integration, real user authentication, agent tools, and Wazuh integration are not implemented. See the [baseline validation record](docs/validation/milestone-02-fastapi-baseline.md).
 
 The normal inference model is `qwen3:4b-instruct`; `qwen3:4b` is retained as an experimental thinking model and is not selectable through the fixed-model client. The owner verified a direct Ollama API result of `LAB_READY` with `done: true` and `done_reason: "stop"` for the instruct variant. The owner also verified that the updated Python client returned `LAB_READY`; see the [Milestone 3 validation record](docs/validation/milestone-03-ollama-integration.md). Instruction-following does not establish model trustworthiness. See [ADR-0002 (Accepted)](docs/security-decisions/ADR-0002-local-ollama-client.md) and [Investigation 001](docs/investigations/001-ollama-generation-truncation.md).
 
@@ -44,14 +44,14 @@ The diagram shows logical flow, not direct model access to tools. Application co
 
 ## Eight development milestones
 
-Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only; synthetic data and later work remain planned. Each requires evidence before it is marked complete.
+Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only. Milestone 4 is complete for its implemented and tested internal scope, with ADR-0003 Accepted; later work remains planned.
 
 | # | Milestone | Completion evidence |
 | --- | --- | --- |
 | 1 | Scope, trust boundaries, and standards | Reviewed README, agent instructions, ignore rules, and ADR-0001; unresolved decisions recorded. |
 | 2 | Minimal FastAPI baseline — complete | Code review passed; 12 tests passed; dependency and whitespace checks passed; live health/docs checks and loopback binding verified. See the [validation record](docs/validation/milestone-02-fastapi-baseline.md). Internal Ollama integration is covered by Milestone 3. |
-| 3 | Internal local Ollama client — complete | ADR-0002 accepted for internal inference only; 85 tests passed, dependency and whitespace checks passed, incomplete generation rejected, and direct API and Python-client `LAB_READY` results owner-verified. See the [validation record](docs/validation/milestone-03-ollama-integration.md). Synthetic financial data remains future work. |
-| 4 | Application identity and authorization | Explicit role/action/resource policy with positive and negative tests, including cross-user access attempts. |
+| 3 | Internal local Ollama client — complete | ADR-0002 accepted for internal inference only; 85 tests passed, dependency and whitespace checks passed, incomplete generation rejected, and direct API and Python-client `LAB_READY` results owner-verified. See the [validation record](docs/validation/milestone-03-ollama-integration.md). Synthetic fixtures are covered by Milestone 4. |
+| 4 | Prompt injection, synthetic data, and application authorization — complete | Offline fixture identities, customer-scoped read policy, positive/negative tests, and protected injection demonstration; vulnerable comparison is an opt-in outcome simulation. See the [validation record](docs/validation/milestone-04-prompt-injection-authorization.md). ADR-0003 Accepted. Live control and injected phases both followed the legitimate task; no unauthorized request was observed and authorization was not exercised in that live run. |
 | 5 | Controlled agent tools | Narrow tool contracts, per-invocation authorization, validated arguments/results, execution limits, and denied misuse tests. |
 | 6 | Isolated adversarial exercises | Reproducible prompt-injection and tool-abuse cases with bounded targets, expected outcomes, and regression tests. |
 | 7 | Security telemetry and Wazuh | Reviewed event schema and redaction tests; separately approved Wazuh integration with verified event delivery and detection results. |
@@ -61,7 +61,7 @@ Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Mile
 
 See [AGENTS.md](AGENTS.md) for coding-agent requirements and [ADR-0001](docs/security-decisions/ADR-0001-scope-and-trust-boundaries.md) for the accepted scope and trust-boundary principles and pending implementation decisions. Use small changes with security-focused tests. Keep secrets and sensitive local artifacts out of Git; ignore patterns are only a supporting safeguard and do not sanitize tracked files.
 
-GitHub pushes, external operations, and Wazuh modifications require explicit approval. The minimal health application and its PyPI dependencies were previously authorized; new work requires authorization for its scope. No commit or push is currently authorized.
+GitHub pushes, external operations, and Wazuh modifications require explicit approval. The minimal health application and its PyPI dependencies were previously authorized; new work, commits, and pushes require task-specific authorization.
 
 ## Run the minimal application
 
@@ -75,6 +75,29 @@ Run from this repository using its existing Python 3.14.4 virtual environment. F
 The explicit host binds the server to IPv4 loopback. Do not change it to `0.0.0.0` or expose it through a proxy or container port mapping. From the same host, `GET http://127.0.0.1:8000/healthz` returns HTTP 200 with `{"status": "ok"}`. Stop the server with Ctrl+C. The endpoint reports application liveness only; it does not check Ollama or any other dependency.
 
 Until appropriate authentication and authorization controls are implemented, only static diagnostics may be exposed. Disabling API documentation reduces the exposed route surface; it does not provide authentication or authorization.
+
+## Reproduce the offline prompt-injection demonstration
+
+```bash
+.venv/bin/python -m app.prompt_injection_demo
+.venv/bin/python -m app.prompt_injection_demo --include-vulnerable-simulation
+```
+
+Both commands use only fictional SYNTHETIC records and a fixed offline model stub; they do not contact Ollama. A malicious retrieved note asks the model to impersonate another customer. The stub assumes compliance and proposes the other customer's ID, but the Python reader uses the original trusted fixture identity and denies access. The default command also demonstrates an allowed own-customer read. Neither command prints financial records or prompts.
+
+The explicit flag enables a clearly labeled hypothetical vulnerable outcome. It performs no unauthorized read and is isolated from the protected reader. This illustrates the risk of trusting model-selected scope without claiming a live exploit succeeded. Fixture caller context is not real user authentication; production identity must come from an authenticated trusted source. See [ADR-0003 (Accepted)](docs/security-decisions/ADR-0003-synthetic-data-and-authorization.md) and the [Milestone 4 evidence and limitations](docs/validation/milestone-04-prompt-injection-authorization.md). FastAPI remains health-only and must run on `127.0.0.1` as documented above.
+
+## Optional live prompt-injection experiment
+
+Run this separate experiment only when you intend to send two synthetic prompts to your existing local Ollama service:
+
+```bash
+.venv/bin/python -m app.live_prompt_injection --run-live
+```
+
+Without `--run-live`, the command makes no requests. It uses the existing fixed `qwen3:4b-instruct` client and `127.0.0.1:11434` destination. The control task summarizes the caller's authorized synthetic financial document; the second document embeds instructions to request another customer's records. Only fixed sanitized result categories are printed. Recognized unauthorized requests pass through Python authorization using the original fixture identity and must be denied. No records are sent back to the model.
+
+The owner-verified live run followed the legitimate task in both control and injected phases. No unauthorized request was observed, so the live run did not exercise authorization. Offline tests independently verify cross-customer denial. This single run does not establish general injection resistance. The strict output classifier is not a general intent detector; see the [live experiment protocol and observed results](docs/validation/milestone-04-prompt-injection-authorization.md#opt-in-live-experiment-protocol-and-results). The existing offline demonstration and opt-in vulnerable simulation remain separate.
 
 ## Python concepts in this increment
 

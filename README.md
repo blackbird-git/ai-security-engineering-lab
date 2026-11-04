@@ -16,31 +16,47 @@ An AI-assisted engineering lab demonstrating how trusted application controls co
 ## Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Python["Python application"]
-        API["FastAPI: GET /healthz only"]
-        CLI["Internal CLI orchestration"]
-        AUTH["Trusted validation and authorization"]
-        TOOLS["Scoped read-only agent tools"]
-        TELEMETRY["Sanitized JSONL security telemetry"]
-        SOC["SOC draft validation and evidence-based rendering"]
+flowchart TB
+    subgraph APPLICATION["AI APPLICATION SECURITY"]
+        direction TB
+        ID["Trusted fixture identity"]
+        APP["Python application"]
+        MODEL["Local Ollama"]
+        AUTH["Python authorization"]
+        TOOLS["Scoped read-only tools"]
+        DATA["Synthetic financial data"]
+
+        ID --> APP
+        APP -->|request| MODEL
+        MODEL -->|untrusted proposal| AUTH
+        AUTH -->|authorized only| TOOLS
+        TOOLS --> DATA
     end
-    ID["Fixture service identity"] --> AUTH
-    CLI -->|bounded request| OLLAMA["Local Ollama: qwen3:4b-instruct"]
-    OLLAMA -->|untrusted tool proposal| AUTH
-    AUTH -->|authorized read only| TOOLS
-    TOOLS --> DATA["Synthetic financial data"]
-    AUTH --> TELEMETRY
-    TELEMETRY -->|read-only collection mount| WAZUH["Wazuh 4.14.9 detection and indexing"]
-    WAZUH -->|reviewed export| EVIDENCE["Pinned sanitized alert evidence"]
-    EVIDENCE --> SOC
-    SOC -->|optional generation request| OLLAMA
-    OLLAMA -->|untrusted draft proposal| SOC
-    SOC --> REVIEW["Explicit human approval or rejection"]
-    REVIEW -->|Approved only| REPORT["Private local approved report"]
+
+    subgraph DETECTION["DETECTION AND RESPONSE"]
+        direction TB
+        EVENTS["Structured security events"]
+        WAZUH["Wazuh SIEM"]
+        EVIDENCE["Sanitized alert evidence"]
+        SOC["AI-assisted investigation"]
+        HUMAN["Explicit human approval"]
+        REPORT["Approved local report"]
+
+        EVENTS --> WAZUH
+        WAZUH --> EVIDENCE
+        EVIDENCE --> SOC
+        SOC -->|validated draft| HUMAN
+        HUMAN -->|approved only| REPORT
+    end
+
+    APPLICATION -->|authorization decisions| DETECTION
 ```
 
-The diagram includes opt-in live inference paths; default CLI demonstrations use mocks. FastAPI is a separate health-only entry point; it exposes no inference, identity selection, financial data, tools, or SOC operations. Internal Python mediates every tool request. The model receives no direct data-store, shell, filesystem, credential, or Wazuh-administration access. SOC analysis consumes a reviewed snapshot, not a live autonomous SIEM connection.
+The two flows are stacked to keep the diagram narrow. **Python enforces authorization** using trusted fixture context; Ollama only proposes operations and cannot grant permissions. Model output stays untrusted. Structured events describe Python decisions, not financial records. The connector between flows represents those decisions, not data access by Wazuh.
+
+**FastAPI exposes only `GET /healthz`.** Inference, tools, and investigations run through internal Python/CLI modules; default demonstrations use mocks. Live mode uses local `qwen3:4b-instruct`. The investigation workflow separately uses the same local client without a cross-diagram model connection, validates its proposal, and renders a cited draft. It consumes reviewed alert evidence, not a live autonomous SIEM connection.
+
+**No autonomous remediation:** only an explicit trusted approval permits a local report; Draft and Rejected states cannot publish. The model has no direct data-store, shell, filesystem, credential, or Wazuh-administration access.
 
 ## Demonstrated security scenarios
 

@@ -15,48 +15,9 @@ An AI-assisted engineering lab demonstrating how trusted application controls co
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph APPLICATION["AI APPLICATION SECURITY"]
-        direction TB
-        ID["Trusted fixture identity"]
-        APP["Python application"]
-        MODEL["Local Ollama"]
-        AUTH["Python authorization"]
-        TOOLS["Scoped read-only tools"]
-        DATA["Synthetic financial data"]
+**AI Application Security:** Local Ollama (`qwen3:4b-instruct`) provides model inference. Python validates untrusted model-generated proposals; trusted application code independently enforces service permissions and customer scope using fixture identities. Only authorized, scoped read-only tools can access synthetic financial customer data. FastAPI exposes only `GET /healthz`; inference and tools run through internal Python/CLI modules, with mocks used by default. The model cannot grant permissions or directly access databases, shell commands, files, credentials, or Wazuh administration.
 
-        ID --> APP
-        APP -->|request| MODEL
-        MODEL -->|untrusted proposal| AUTH
-        AUTH -->|authorized only| TOOLS
-        TOOLS --> DATA
-    end
-
-    subgraph DETECTION["DETECTION AND RESPONSE"]
-        direction TB
-        EVENTS["Structured security events"]
-        WAZUH["Wazuh SIEM"]
-        EVIDENCE["Sanitized alert evidence"]
-        SOC["AI-assisted investigation"]
-        HUMAN["Explicit human approval"]
-        REPORT["Approved local report"]
-
-        EVENTS --> WAZUH
-        WAZUH --> EVIDENCE
-        EVIDENCE --> SOC
-        SOC -->|validated draft| HUMAN
-        HUMAN -->|approved only| REPORT
-    end
-
-    APPLICATION -->|authorization decisions| DETECTION
-```
-
-The two flows are stacked to keep the diagram narrow. **Python enforces authorization** using trusted fixture context; Ollama only proposes operations and cannot grant permissions. Model output stays untrusted. Structured events describe Python decisions, not financial records. The connector between flows represents those decisions, not data access by Wazuh.
-
-**FastAPI exposes only `GET /healthz`.** Inference, tools, and investigations run through internal Python/CLI modules; default demonstrations use mocks. Live mode uses local `qwen3:4b-instruct`. The investigation workflow separately uses the same local client without a cross-diagram model connection, validates its proposal, and renders a cited draft. It consumes reviewed alert evidence, not a live autonomous SIEM connection.
-
-**No autonomous remediation:** only an explicit trusted approval permits a local report; Draft and Rejected states cannot publish. The model has no direct data-store, shell, filesystem, credential, or Wazuh-administration access.
+**Detection and Response:** Python authorization decisions generate sanitized structured JSON security events. Wazuh 4.14.9 collects and analyzes these events; custom rules detect denied unauthorized requests and repeated failures. Reviewed sanitized alerts support AI-assisted investigation drafting, with Python validating evidence and every evidence reference before rendering a cited draft. A separate, explicit human approval decision is required before finalizing a local report; Draft and Rejected reports cannot publish. No autonomous remediation is available.
 
 ## Demonstrated security scenarios
 

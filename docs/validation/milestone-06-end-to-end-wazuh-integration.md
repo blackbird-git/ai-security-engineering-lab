@@ -30,15 +30,15 @@ Backed up effective/startup config, all custom rules, container/model metadata, 
 5. Installed `/var/ossec/etc/rules/ai_security_rules.xml` separately, `wazuh:wazuh` / 0660. Existing `local_rules.xml` was never overwritten. A manager-only restart activated the new rules while retaining collection mounts/configuration.
 6. Fresh-session logtest assertions passed for grouping rule 100600/0 and individual rules 100602/7, 100603/5, 100604/7, 100605/5, and 100606/4. SSH 100001/5/sshd passed after rule activation and again during final verification.
 
-Read-only telemetry mount:
+Read-only telemetry mount (host path shown relative to the AI repository root; runtime bind uses its absolute resolution):
 
 ```text
-Host:      /home/ilyam/ai-security-engineering-lab/local/telemetry
+Host:      local/telemetry
 Container: /var/log/ai-security
 RW:        false
 ```
 
-Private config source `/home/ilyam/ai-security-engineering-lab/local/wazuh-collection/ossec.conf` is also mounted read-only at `/wazuh-config-mount/etc/ossec.conf`. Existing startup behavior copies it to effective `/var/ossec/etc/ossec.conf`. Use the same override on future manager recreations; base-only recreation removes this integration. No endpoint collector was modified.
+Private config source `local/wazuh-collection/ossec.conf` is also mounted read-only at `/wazuh-config-mount/etc/ossec.conf`. Existing startup behavior copies it to effective `/var/ossec/etc/ossec.conf`. Use the same override on future manager recreations; base-only recreation removes this integration. No endpoint collector was modified.
 
 ## Real application event generation and observed alerts
 

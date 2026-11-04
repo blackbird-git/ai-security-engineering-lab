@@ -7,7 +7,7 @@
 
 ## Confirmed architecture
 
-The existing endpoint `security-endpoint-01` is active as agent 002, but has no mount of host telemetry. The manager is local agent 000 and likewise cannot currently see the application JSONL. Manager, indexer, and dashboard images are 4.14.9. The manager Compose service is `wazuh.manager`, with base source/working directory under `/home/ilyam/security-operations-lab/wazuh-docker/single-node`; those files were not modified.
+The existing endpoint `security-endpoint-01` is active as agent 002, but has no mount of host telemetry. The manager is local agent 000 and likewise cannot currently see the application JSONL. Manager, indexer, and dashboard images are 4.14.9. The manager Compose service is `wazuh.manager`, with base source/working directory under `../security-operations-lab/wazuh-docker/single-node`; those files were not modified.
 
 Manager `/var/ossec/etc` and `/var/ossec/logs` are existing named volumes. The startup config bind targets `/wazuh-config-mount/etc/ossec.conf`. Read-only review of `/etc/cont-init.d/0-wazuh-init` confirms files there are copied into `/var/ossec` at startup. A persistent collection configuration therefore needs a reviewed startup source, not only a live volume edit.
 
@@ -15,7 +15,7 @@ Manager and endpoint logcollectors run as root/group wazuh. Docker reports secco
 
 ## Selected design and changes prepared
 
-Recommend the manager's existing local collector with a read-only bind of **only** `/home/ilyam/ai-security-engineering-lab/local/telemetry` to `/var/log/ai-security`. Reusing the endpoint would also require mount/config/recreation changes there, expanding the affected components unnecessarily for this local lab. A shared directory alone does not forward logs; manager-local collection is what reads it.
+Recommend the manager's existing local collector with a read-only bind of **only** `local/telemetry` to `/var/log/ai-security`. Reusing the endpoint would also require mount/config/recreation changes there, expanding the affected components unnecessarily for this local lab. A shared directory alone does not forward logs; manager-local collection is what reads it.
 
 Prepared `integrations/wazuh/compose.collection.example.yml`: one added read-only telemetry bind, plus a replacement of the existing startup-config bind source with a private ignored AI-repository config copy. This keeps all SIEM repository source files unchanged. Updated `localfile.example.xml` to JSON collection at `/var/log/ai-security/security-events.jsonl`.
 

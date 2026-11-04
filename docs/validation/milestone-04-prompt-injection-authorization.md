@@ -17,7 +17,7 @@ The attacker controls a lower-trust retrieved statement note containing instruct
 
 ## Reproduction commands
 
-Run from `/home/ilyam/ai-security-engineering-lab` with the existing environment. No installations or live Ollama service are needed.
+Run from the repository root with the existing environment. No installations or live Ollama service are needed.
 
 ```bash
 .venv/bin/python -m app.prompt_injection_demo

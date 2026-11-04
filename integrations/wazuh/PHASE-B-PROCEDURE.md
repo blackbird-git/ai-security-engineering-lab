@@ -53,7 +53,7 @@ Expected matches, not yet engine-confirmed:
 
 Source event severity and Wazuh alert level are different fields/scales. No rule establishes successful injection or data disclosure.
 
-Use one Bash session from `/home/ilyam/ai-security-engineering-lab`. Stop on every failed assertion, test, changed checksum, or unexpected rule ID. Never replace `local_rules.xml`. The procedure deliberately stops short of restarting the manager or configuring collection.
+Use one Bash session from the AI repository root. Stop on every failed assertion, test, changed checksum, or unexpected rule ID. Never replace `local_rules.xml`. The procedure deliberately stops short of restarting the manager or configuring collection.
 
 ### 1. Preflight and recoverable host backup
 

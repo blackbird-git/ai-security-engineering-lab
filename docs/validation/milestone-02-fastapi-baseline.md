@@ -2,7 +2,7 @@
 
 - Validation date: November 4, 2026
 - Status: Complete for the owner-approved minimal FastAPI baseline; code review passed
-- Repository: `/home/ilyam/ai-security-engineering-lab`
+- Repository: `.`
 - Python: 3.14.4, using the repository's existing `.venv`
 
 ## Scope and evidence provenance

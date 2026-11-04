@@ -4,7 +4,7 @@
 - Status: Complete for the internal local Ollama client only
 - Decision: [ADR-0002](../security-decisions/ADR-0002-local-ollama-client.md), Accepted
 - Investigation: [001: Ollama generation truncation](../investigations/001-ollama-generation-truncation.md)
-- Repository: `/home/ilyam/ai-security-engineering-lab`
+- Repository: `.`
 
 ## Scope and evidence provenance
 

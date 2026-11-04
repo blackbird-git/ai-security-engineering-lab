@@ -10,7 +10,7 @@ Use the **existing manager's local logcollector**, with a **dedicated read-only 
 
 Read-only inspection on November 4, 2026 confirmed:
 
-- `single-node-wazuh.manager-1`, indexer, and dashboard use image version 4.14.9. The manager's Compose service is `wazuh.manager`, project directory `/home/ilyam/security-operations-lab/wazuh-docker/single-node`, source file `docker-compose.yml`.
+- `single-node-wazuh.manager-1`, indexer, and dashboard use image version 4.14.9. The manager's Compose service is `wazuh.manager`, project directory `../security-operations-lab/wazuh-docker/single-node`, source file `docker-compose.yml`.
 - The existing `security-endpoint-01` is registered and active as agent 002; the manager is local agent 000. The endpoint has only its read-only agent-key volume, no host telemetry mount. Its collector already monitors authentication/journald/package logs.
 - The manager has no host AI telemetry mount. It has persistent `/var/ossec/etc` and `/var/ossec/logs` volumes, plus a startup config bind at `/wazuh-config-mount/etc/ossec.conf`. Its init script copies that startup config into `/var/ossec/etc` on container start. Editing only the live volume config is therefore not a reliable persistent setup.
 - Both collectors run as user root/group wazuh. Docker reported seccomp/cgroupns security options, with no reported rootless/userns-remap option. Root access to a proposed bind still needs runtime verification, not assumption.
@@ -22,13 +22,15 @@ Read-only inspection on November 4, 2026 confirmed:
 | Manager local collector without a mount | File is not visible; copying snapshots into a container would need a reliable relay and inode handling | Not a continuous integration path. Do not use ad hoc `docker cp` loops as forwarding. |
 | Manager local collector plus dedicated read-only telemetry bind | One narrow bind, one localfile stanza, private startup-config override, manager-only recreation and separate AI rule file | Recommended: one affected container, no endpoint change, no application network dependency. |
 
+Repository-relative host paths below resolve from the AI repository root. The shell assignment and deployed Compose override retain absolute paths for the verified installation; adapt them together for another clone.
+
 ## Exact paths and permissions
 
 | Purpose | Path | Access |
 | --- | --- | --- |
-| Application source JSONL | `/home/ilyam/ai-security-engineering-lab/local/telemetry/security-events.jsonl` | Application UID 1000 owns it, mode 0600; parent telemetry directory 0700 |
+| Application source JSONL | `local/telemetry/security-events.jsonl` | Application UID 1000 owns it, mode 0600; parent telemetry directory 0700 |
 | Container telemetry view | `/var/log/ai-security/security-events.jsonl` | Read-only bind of **only** host `local/telemetry/` |
-| Private startup-config copy | `/home/ilyam/ai-security-engineering-lab/local/wazuh-collection/ossec.conf` | Host UID 1000, mode 0600, private parent 0700; never tracked/printed |
+| Private startup-config copy | `local/wazuh-collection/ossec.conf` | Host UID 1000, mode 0600, private parent 0700; never tracked/printed |
 | Container startup config | `/wazuh-config-mount/etc/ossec.conf` | Private copy mounted read-only, replacing only the existing mount at that destination |
 | Effective collector config | `/var/ossec/etc/ossec.conf` | Copied by the existing init script; retain baseline owner/mode and all existing settings |
 | Separate AI rules | `/var/ossec/etc/rules/ai_security_rules.xml` | `wazuh:wazuh`, 0660; do not replace `local_rules.xml` |

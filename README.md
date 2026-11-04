@@ -44,7 +44,7 @@ The diagram shows logical flow, not direct model access to tools. Application co
 
 ## Eight development milestones
 
-Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only. Milestone 4 is complete for its implemented and tested internal scope, with ADR-0003 Accepted. Milestone 5 is complete for the implemented fixture-based framework, with offline tests and owner-verified live authorized execution. Milestone 6 has verified application-to-JSONL-to-manager-to-indexer delivery and retained the approved integration. Earlier rule-only trials were rolled back; ADR-0005 is Accepted for the implemented scope. Correlation expiry remains unverified. Milestone 7 is implemented and locally validated, with hosted CI validation pending; final portfolio review remains planned.
+Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only. Milestone 4 is complete for its implemented and tested internal scope, with ADR-0003 Accepted. Milestone 5 is complete for the implemented fixture-based framework, with offline tests and owner-verified live authorized execution. Milestone 6 has verified application-to-JSONL-to-manager-to-indexer delivery and retained the approved integration. Earlier rule-only trials were rolled back; ADR-0005 is Accepted for the implemented scope. Correlation expiry remains unverified. Milestone 7 passed local and main-push hosted CI validation. Milestone 8 is complete for the implemented synthetic investigation workflow, with offline security tests and owner-verified live generation and explicit approval.
 
 | # | Milestone | Completion evidence |
 | --- | --- | --- |
@@ -54,8 +54,8 @@ Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Mile
 | 4 | Prompt injection, synthetic data, and application authorization — complete | Offline fixture identities, customer-scoped read policy, positive/negative tests, and protected injection demonstration; vulnerable comparison is an opt-in outcome simulation. See the [validation record](docs/validation/milestone-04-prompt-injection-authorization.md). ADR-0003 Accepted. Live control and injected phases both followed the legitimate task; no unauthorized request was observed and authorization was not exercised in that live run. |
 | 5 | Scoped agent tools and service identities — complete | Two read-only tools, fixture service/tool/customer policies, strict request bounds, single-step orchestration, dummy-secret separation, and offline negative tests. See [validation](docs/validation/milestone-05-scoped-agent-tools.md) and [ADR-0004 (Accepted)](docs/security-decisions/ADR-0004-scoped-agent-tools.md). |
 | 6 | Structured AI telemetry and Wazuh collection — complete for the verified lab scope | Five fresh application denial IDs matched manager alerts and the existing Wazuh alert index; read-only collection and separate rules remain installed. See [end-to-end evidence](docs/validation/milestone-06-end-to-end-wazuh-integration.md), historical [Phase B trials](docs/validation/milestone-06-phase-b-wazuh-rule-validation.md), and [ADR-0005 (Accepted)](docs/security-decisions/ADR-0005-security-telemetry.md). |
-| 7 | GitHub Actions security pipeline — implemented; hosted validation pending | Python 3.14 tests, dependency consistency/auditing, secret scanning, and workflow policy checks. See [validation](docs/validation/milestone-07-security-ci.md) and [ADR-0006 (Accepted)](docs/security-decisions/ADR-0006-security-ci.md). |
-| 8 | Evidence and portfolio review | Reproducible walkthrough, sanitized test/detection evidence, documented limitations, and accurate statements of demonstrated skills. |
+| 7 | GitHub Actions security pipeline — main-push CI verified | Python 3.14 tests, dependency consistency/auditing, secret scanning, and workflow policy checks. See [validation](docs/validation/milestone-07-security-ci.md) and [ADR-0006 (Accepted)](docs/security-decisions/ADR-0006-security-ci.md). |
+| 8 | AI-assisted SOC investigation with human approval — complete | Strict sanitized evidence ingestion, cited bounded drafts, and explicit Draft/Approved/Rejected review. See [validation](docs/validation/milestone-08-soc-investigation.md) and [ADR-0007 (Accepted)](docs/security-decisions/ADR-0007-human-reviewed-investigations.md). |
 
 ## Working standards
 
@@ -155,6 +155,21 @@ Correlation expiration is unverified, the dashboard UI was not inspected, and su
 
 ## CI status
 
-[Security CI](https://github.com/blackbird-git/ai-security-engineering-lab/actions/workflows/security-ci.yml) is implemented and locally validated; its first GitHub-hosted run is pending. It triggers on pushes to `main`, pull requests targeting `main`, and manual dispatch. Three hosted jobs run the full offline regression suite once, check dependencies, audit pinned requirements with pip-audit, scan history/source with Gitleaks, and validate workflow syntax/security settings. Only `contents: read` is granted; no local Ollama, Wazuh, deployment credentials, or paid scanner is required.
+[Security CI](https://github.com/blackbird-git/ai-security-engineering-lab/actions/workflows/security-ci.yml) passed local validation and all three jobs in [main-push run 41906122739](https://github.com/blackbird-git/ai-security-engineering-lab/actions/runs/41906122739). It triggers on pushes to `main`, pull requests targeting `main`, and manual dispatch. Three hosted jobs run the full offline regression suite once, check dependencies, audit pinned requirements with pip-audit, scan history/source with Gitleaks, and validate workflow syntax/security settings. Only `contents: read` is granted; no local Ollama, Wazuh, deployment credentials, or paid scanner is required.
 
-Application requirements stay unchanged; pinned scanners use isolated tooling. Tests and real findings fail their jobs. See the [operation and local reproduction guide](docs/ci/security-pipeline.md), [Milestone 7 local results](docs/validation/milestone-07-security-ci.md), and [ADR-0006 (Accepted)](docs/security-decisions/ADR-0006-security-ci.md). Required GitHub checks and hosted execution still need verification.
+Application requirements stay unchanged; pinned scanners use isolated tooling. Tests and real findings fail their jobs. See the [operation and local reproduction guide](docs/ci/security-pipeline.md), [Milestone 7 local results](docs/validation/milestone-07-security-ci.md), and [ADR-0006 (Accepted)](docs/security-decisions/ADR-0006-security-ci.md). Required-check settings and PR/manual-trigger behavior still need verification.
+
+## AI-assisted SOC investigation (Milestone 8)
+
+Reviewed sanitized Wazuh evidence → strict schema/hash validation → one mock or opt-in local Ollama proposal → Python-validated cited draft → separate human approval/rejection → local approved report. The model has no tools, credentials, publication authority, or remediation access; FastAPI stays health-only. Python renders factual content from validated evidence rather than accepting unrestricted generated prose.
+
+```bash
+# Offline Draft; no report persisted
+.venv/bin/python -m app.soc_investigation
+# Review displayed draft and type APPROVE or REJECT
+.venv/bin/python -m app.soc_investigation --review
+# Optional one-call local inference (owner-verified successful run)
+.venv/bin/python -m app.soc_investigation --run-live --review
+```
+
+Only Approved reports are stored under ignored `local/investigations/approved/`. Rejected drafts cannot publish or become Approved. This is trusted local review, not authenticated analyst identity or production approval infrastructure. The exact five-alert fixture is pinned; new evidence needs a reviewed contract. The owner verified a live eight-section draft citing E1–E5 and explicitly approved local storage. Other runs may fail the unchanged token limit. Reviewer identity is fixture-based: no authenticated reviewer service, tamper-resistant approval audit trail, automated retention management, production SOC integration, or autonomous remediation exists. See the [guide](docs/soc-investigation.md), [offline and owner-verified live evidence](docs/validation/milestone-08-soc-investigation.md), and [ADR-0007 (Accepted)](docs/security-decisions/ADR-0007-human-reviewed-investigations.md) for limits, schema, and reproducible decisions.

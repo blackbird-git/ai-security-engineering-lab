@@ -1,0 +1,8 @@
+<!-- Candidate manager-local collection; merge only this localfile element.
+     Requires the separately approved read-only telemetry directory mount. -->
+<ossec_config>
+  <localfile>
+    <log_format>json</log_format>
+    <location>/var/log/ai-security/security-events.jsonl</location>
+  </localfile>
+</ossec_config>

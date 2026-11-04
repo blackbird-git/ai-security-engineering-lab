@@ -4,7 +4,7 @@ A hands-on training and portfolio project for LLM and agent security, applicatio
 
 ## Current status
 
-Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Milestone 3 is complete for the internal local Ollama client. Milestone 4 is complete for synthetic fixtures, internal application authorization, offline demonstrations, and an owner-verified opt-in live experiment. Milestone 5 is complete for scoped internal read-only tools and fixture service identities, with ADR-0004 Accepted and one owner-verified live authorized execution. FastAPI-to-Ollama integration, real authentication, and Wazuh integration are not implemented. See the [baseline validation record](docs/validation/milestone-02-fastapi-baseline.md).
+Milestone 2's minimal FastAPI baseline passed code review and automated and live validation on November 4, 2026. It implements only `GET /healthz`, returning `{"status": "ok"}`, with Uvicorn verified listening on `127.0.0.1:8000`. Swagger, ReDoc, and OpenAPI endpoints are disabled. Milestone 3 is complete for the internal local Ollama client. Milestone 4 is complete for synthetic fixtures, internal application authorization, offline demonstrations, and an owner-verified opt-in live experiment. Milestone 5 is complete for scoped internal read-only tools and fixture service identities, with ADR-0004 Accepted and one owner-verified live authorized execution. Milestone 6 is complete for structured authorization telemetry, manager-local collection, and indexed AI alerts. FastAPI-to-Ollama integration and real authentication are not implemented. See the [baseline validation record](docs/validation/milestone-02-fastapi-baseline.md).
 
 The normal inference model is `qwen3:4b-instruct`; `qwen3:4b` is retained as an experimental thinking model and is not selectable through the fixed-model client. The owner verified a direct Ollama API result of `LAB_READY` with `done: true` and `done_reason: "stop"` for the instruct variant. The owner also verified that the updated Python client returned `LAB_READY`; see the [Milestone 3 validation record](docs/validation/milestone-03-ollama-integration.md). Instruction-following does not establish model trustworthiness. See [ADR-0002 (Accepted)](docs/security-decisions/ADR-0002-local-ollama-client.md) and [Investigation 001](docs/investigations/001-ollama-generation-truncation.md).
 
@@ -44,7 +44,7 @@ The diagram shows logical flow, not direct model access to tools. Application co
 
 ## Eight development milestones
 
-Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only. Milestone 4 is complete for its implemented and tested internal scope, with ADR-0003 Accepted. Milestone 5 is complete for the implemented fixture-based framework, with offline tests and owner-verified live authorized execution; later work remains planned.
+Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Milestone 2 is complete for the owner-approved minimal FastAPI baseline. Milestone 3 is complete for the owner-approved internal Ollama client only. Milestone 4 is complete for its implemented and tested internal scope, with ADR-0003 Accepted. Milestone 5 is complete for the implemented fixture-based framework, with offline tests and owner-verified live authorized execution. Milestone 6 has verified application-to-JSONL-to-manager-to-indexer delivery and retained the approved integration. Earlier rule-only trials were rolled back; ADR-0005 is Accepted for the implemented scope. Correlation expiry remains unverified; later milestones remain planned.
 
 | # | Milestone | Completion evidence |
 | --- | --- | --- |
@@ -53,8 +53,8 @@ Milestone 1's scope and trust-boundary principles are accepted in ADR-0001. Mile
 | 3 | Internal local Ollama client — complete | ADR-0002 accepted for internal inference only; 85 tests passed, dependency and whitespace checks passed, incomplete generation rejected, and direct API and Python-client `LAB_READY` results owner-verified. See the [validation record](docs/validation/milestone-03-ollama-integration.md). Synthetic fixtures are covered by Milestone 4. |
 | 4 | Prompt injection, synthetic data, and application authorization — complete | Offline fixture identities, customer-scoped read policy, positive/negative tests, and protected injection demonstration; vulnerable comparison is an opt-in outcome simulation. See the [validation record](docs/validation/milestone-04-prompt-injection-authorization.md). ADR-0003 Accepted. Live control and injected phases both followed the legitimate task; no unauthorized request was observed and authorization was not exercised in that live run. |
 | 5 | Scoped agent tools and service identities — complete | Two read-only tools, fixture service/tool/customer policies, strict request bounds, single-step orchestration, dummy-secret separation, and offline negative tests. See [validation](docs/validation/milestone-05-scoped-agent-tools.md) and [ADR-0004 (Accepted)](docs/security-decisions/ADR-0004-scoped-agent-tools.md). |
-| 6 | Isolated adversarial exercises | Reproducible prompt-injection and tool-abuse cases with bounded targets, expected outcomes, and regression tests. |
-| 7 | Security telemetry and Wazuh | Reviewed event schema and redaction tests; separately approved Wazuh integration with verified event delivery and detection results. |
+| 6 | Structured AI telemetry and Wazuh collection — complete for the verified lab scope | Five fresh application denial IDs matched manager alerts and the existing Wazuh alert index; read-only collection and separate rules remain installed. See [end-to-end evidence](docs/validation/milestone-06-end-to-end-wazuh-integration.md), historical [Phase B trials](docs/validation/milestone-06-phase-b-wazuh-rule-validation.md), and [ADR-0005 (Accepted)](docs/security-decisions/ADR-0005-security-telemetry.md). |
+| 7 | Detection hardening — planned | Correlation-expiration validation, supervised log rotation, and further detection tuning with sanitized evidence. |
 | 8 | Evidence and portfolio review | Reproducible walkthrough, sanitized test/detection evidence, documented limitations, and accurate statements of demonstrated skills. |
 
 ## Working standards
@@ -109,6 +109,21 @@ The offline default demonstrates an allowed account read and denied cross-custom
 
 The owner verified one authorized read using the opt-in live mode `.venv/bin/python -m app.scoped_agent --run-live`; it makes one local Ollama call through the existing fixed-model client. The result was withheld from output and model. Live attack scenarios remain unverified; negative authorization outcomes are established by offline tests. Offline mode makes no network calls. Neither mode prints financial records, prompts, or dummy secrets. The simple dummy-only secrets guard is not a general secret scanner, and fixture service identities are not real authentication. See [ADR-0004](docs/security-decisions/ADR-0004-scoped-agent-tools.md) for the permissions table and [Milestone 5 evidence](docs/validation/milestone-05-scoped-agent-tools.md) for tested outcomes and limitations. FastAPI remains health-only with the established loopback binding.
 
+## Local security telemetry (Milestone 6 Phase A)
+
+```bash
+# Offline scenarios; no filesystem logging by default
+.venv/bin/python -m app.telemetry_demo
+# Explicitly enable local-only JSONL under the ignored local/ directory
+.venv/bin/python -m app.telemetry_demo --log-file local/telemetry/security-events.jsonl
+```
+
+The demo exercises one allowed account read and five real Python denials: customer scope, unknown tool, identity override, service permission, and malformed proposal. Model proposals are mocked; the application makes no live inference or network calls. When the installed collector is active, explicitly persisted events are collected by Wazuh. Events include UTC time, schema version, trusted outcome/reason, UUID correlation, pseudonymous service alias, and normalized tool ID. No prompts, model text, customer identifiers/names, financial values, tokens, or secrets enter events.
+
+Storage is disabled unless explicitly configured. Enabled logging is bounded to 1,024 bytes per event and 1 MiB per file, with restrictive file permissions and no rotation. A failure to append an authorization event denies an otherwise allowed read before data access; denied requests stay denied even if logging fails. Capacity exhaustion can therefore cause availability loss. An `allowed` event records a policy decision, not proof of result delivery. See [ADR-0005](docs/security-decisions/ADR-0005-security-telemetry.md) for the complete schema and failure limitations.
+
+[integrations/wazuh](integrations/wazuh/README.md) contains JSON collection examples, custom XML rules for individual/repeated failures, and illustrative sanitized samples. The approved manager-only collection override and separate rules are now **installed**. Five fresh application denial IDs were verified in actual manager alerts and the existing alert index; see [end-to-end evidence](docs/validation/milestone-06-end-to-end-wazuh-integration.md). SSH, original named volumes/settings, and unrelated services were preserved. Historical rule-only trials were rolled back; correlation expiry, supervised rotation, and dashboard UI validation remain pending. Future configuration changes still require explicit approval. Suspicious requests and denials are indicators, not proof of successful injection. See the [Phase A evidence](docs/validation/milestone-06-phase-a-security-telemetry.md).
+
 ## Python concepts in this increment
 
 - `app/__init__.py` identifies `app` as a Python package. `app/main.py` is a module within that package.
@@ -131,3 +146,9 @@ git status --short
 Tests use an in-process HTTP client and check the exact health response, undefined routes, disabled documentation endpoints, and rejected write methods. `requirements.txt` pins the resolved direct and transitive application/test dependency versions; it is not a package hash lock or a vulnerability assessment.
 
 The [November 4, 2026 validation record](docs/validation/milestone-02-fastapi-baseline.md) separates automated evidence from manually observed live HTTP and listener checks. All 12 baseline tests passed, dependencies were consistent, and live checks verified the health endpoint, disabled documentation routes, and loopback binding. The sandbox TestClient hang and Starlette/HTTPX deprecation warning remain unresolved observations; their causes and remediation are unverified. The subsequent direct Ollama API and Python-client results are documented separately in the [Milestone 3 validation record](docs/validation/milestone-03-ollama-integration.md). They do not authorize public inference, sensitive data access, or tools.
+
+## Milestone 6 evidence and reproduction
+
+The [investigation report](docs/investigations/003-ai-agent-authorization-detection.md) links five sanitized indexed alerts and explains the application-to-JSONL-to-Wazuh path. See the [reproduction guide](integrations/wazuh/REPRODUCE.md) for offline commands and the approval-gated integration procedure; no owner-private configuration or credentials are distributed.
+
+Correlation expiration is unverified, the dashboard UI was not inspected, and supervised log rotation is pending. Fixture identities are not real authentication. All financial data is synthetic. This educational portfolio lab is not a production SOC deployment.

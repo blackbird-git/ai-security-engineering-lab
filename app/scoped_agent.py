@@ -7,6 +7,7 @@ import json
 from app.agent_tools import ServiceIdentity, ToolDenied, execute_tool
 from app.ollama_client import OllamaClient, OllamaClientError
 from app.secrets_boundary import contains_dummy_secret
+from app.security_telemetry import SecurityTelemetry
 
 
 _PROMPT = (
@@ -22,7 +23,8 @@ class AgentFailure(Exception):
     """Sanitized generation failure."""
 
 
-def run_agent(service: ServiceIdentity, generate: Callable[[str], str]) -> dict:
+def run_agent(service: ServiceIdentity, generate: Callable[[str], str], *,
+              telemetry: SecurityTelemetry | None = None, request_id: str | None = None) -> dict:
     """Generate once, validate/authorize once; never send results back to the model."""
     if contains_dummy_secret(_PROMPT):
         raise AgentFailure("Agent generation failed.")
@@ -30,7 +32,7 @@ def run_agent(service: ServiceIdentity, generate: Callable[[str], str]) -> dict:
         proposal = generate(_PROMPT)
     except Exception:
         raise AgentFailure("Agent generation failed.") from None
-    return execute_tool(service, proposal)
+    return execute_tool(service, proposal, telemetry=telemetry, request_id=request_id)
 
 
 def main(argv: list[str] | None = None) -> int:

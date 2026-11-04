@@ -1,0 +1,17 @@
+# Candidate only. Requires explicit deployment approval; do not run standalone.
+# Merge with the inspected single-node Compose file using the original project.
+services:
+  wazuh.manager:
+    volumes:
+      - type: bind
+        source: /home/ilyam/ai-security-engineering-lab/local/telemetry
+        target: /var/log/ai-security
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /home/ilyam/ai-security-engineering-lab/local/wazuh-collection/ossec.conf
+        target: /wazuh-config-mount/etc/ossec.conf
+        read_only: true
+        bind:
+          create_host_path: false
